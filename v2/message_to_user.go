@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -21,4 +22,8 @@ func (mtu MessageToUser) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
+}
+
+func (mtu MessageToUser) index(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Hello World")
 }
