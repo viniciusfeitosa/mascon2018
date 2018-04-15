@@ -1,0 +1,69 @@
+version: '3'
+
+services:
+  # ----------------------------------------
+  # ----------------------------------------
+  # Users service configuration
+  # ----------------------------------------
+  # ----------------------------------------
+
+  users_service_db:
+    build: ./users/db
+    ports:
+      - 5432:5432  # expose ports - HOST:CONTAINER
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: exit 0
+    restart: always
+
+  users_cache:
+    image: redis
+    ports:
+     - "6379:6379"
+    healthcheck:
+      test: exit 0
+    restart: always
+
+  users_service:
+    image: users_service
+    build: ./users
+    environment:
+      - APP_RD_ADDRESS=users_cache:6379
+      - APP_RD_AUTH=password
+      - APP_RD_DBNAME=0
+      - APP_SETTINGS=project.config.DevelopmentConfig
+      - DATABASE_URL=postgresql://postgres:postgres@users_service_db:5432/users_dev?sslmode=disable
+    depends_on:
+      - users_service_db
+      - users_cache
+    links:
+      - users_service_db
+      - users_cache
+    restart: always
+
+  # ----------------------------------------
+  # ----------------------------------------
+  # Preferences Service configuration
+  # ----------------------------------------
+  # ----------------------------------------
+  preferences_service:
+    image: preferences_service
+    build: ./preferences
+    restart: always
+
+  # ----------------------------------------
+  # ----------------------------------------
+  # NGINX configuration
+  # ----------------------------------------
+  # ----------------------------------------
+
+  loadbalance:
+    build: ./nginx
+    ports:
+      - "80:80"
+    links:
+      - users_service
+      - preferences_service
+    restart: always
