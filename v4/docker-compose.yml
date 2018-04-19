@@ -19,7 +19,7 @@ services:
     restart: always
 
   users_cache:
-    image: redis:alpine
+    image: redis
     ports:
      - "6379:6379"
     healthcheck:

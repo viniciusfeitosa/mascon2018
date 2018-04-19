@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-const port string = ":5000"
+const port string = ":3000"
 
 // Topic is a structure that represents a topic choiced by an user
 type Topic struct {
