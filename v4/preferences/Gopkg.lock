@@ -28,6 +28,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/viniciusfeitosa/mascon2018"
+  packages = ["v4/preferences/preferences"]
+  revision = "794cb783f172d95e2e7961723d0f24c7dae5a7e9"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -103,6 +109,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b458303d4e19deb40d5c8f8e991cb3cf5c932d539fbc001ed986e3aba6272e6b"
+  inputs-digest = "462323dd962517a26869ab4a89f8faa34770e9d430318d5b57a9876a6888d2d8"
   solver-name = "gps-cdcl"
   solver-version = 1

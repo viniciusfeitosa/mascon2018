@@ -60,6 +60,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/viniciusfeitosa/mascon2018"
+  packages = ["v4/users/preferences"]
+  revision = "794cb783f172d95e2e7961723d0f24c7dae5a7e9"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
@@ -142,6 +148,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "79b4ccb2afd89a34358ea5024be75d1ed8c401e04334a3171a1db27b63289e13"
+  inputs-digest = "5a38743e860f4b3776c102869bbabc5f5c8f14178db8de915d8a866127283d54"
   solver-name = "gps-cdcl"
   solver-version = 1

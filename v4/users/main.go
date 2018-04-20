@@ -13,7 +13,6 @@ const (
 	createUsersQueue = "CREATE_USER"
 	updateUsersQueue = "UPDATE_USER"
 	deleteUsersQueue = "DELETE_USER"
-	portAddr         = ":50051"
 )
 
 func main() {

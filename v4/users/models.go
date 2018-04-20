@@ -41,9 +41,10 @@ func (u *User) create(db *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
+	u.Password = string(hashedPassword)
 	return db.QueryRow(
 		"INSERT INTO users(id, name, email, password) VALUES($1, $2, $3, $4) RETURNING id",
-		u.ID, u.Name, u.Email, string(hashedPassword)).Scan(&u.ID)
+		u.ID, u.Name, u.Email, u.Password).Scan(&u.ID)
 }
 
 // List return a list of users. Could be applied pagination
