@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,6 +33,7 @@ func (s *Service) initializeRoutes() {
 	s.Router.HandleFunc("/all", s.getUsers).Methods("GET")
 	s.Router.HandleFunc("/", s.createUser).Methods("POST")
 	s.Router.HandleFunc("/{id:[0-9]+}", s.getUser).Methods("GET")
+	s.Router.HandleFunc("/{id:[0-9]+}/preferences", s.getUserWithPreferences).Methods("GET")
 	s.Router.HandleFunc("/{id:[0-9]+}", s.updateUser).Methods("PUT")
 	s.Router.HandleFunc("/{id:[0-9]+}", s.deleteUser).Methods("DELETE")
 	s.Router.HandleFunc("/healthcheck", s.healthcheck).Methods("GET")
@@ -83,6 +85,41 @@ func (s *Service) getUser(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, user)
 }
 
+func (s *Service) getUserWithPreferences(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+	}
+
+	user, err := s.getUserFromDB(id)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			http.Error(w, "User not found", http.StatusBadRequest)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+	response, err := http.Get(fmt.Sprintf("http://172.19.0.6:5000/user/%d", user.ID))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	defer response.Body.Close()
+	var pref interface{}
+	json.NewDecoder(response.Body).Decode(&pref)
+
+	data := struct {
+		User        User        `json:"user"`
+		Preferences interface{} `json:preferences`
+	}{
+		User:        user,
+		Preferences: pref,
+	}
+	respondWithJSON(w, http.StatusOK, data)
+}
+
 func (s *Service) getUsers(w http.ResponseWriter, r *http.Request) {
 	count, _ := strconv.Atoi(r.FormValue("count"))
 	start, _ := strconv.Atoi(r.FormValue("start"))
@@ -110,6 +147,7 @@ func (s *Service) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
+	s.DB.Get(&user.ID, "SELECT nextval('users_id_seq')")
 	if err := user.create(s.DB); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
