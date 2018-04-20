@@ -3,26 +3,32 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	pb "github.com/viniciusfeitosa/mascon2018/v4/users/preferences"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // Service is the struct with app configuration values
 type Service struct {
 	DB     *sqlx.DB
+	Cache  Cache
 	Router *mux.Router
 }
 
 // Initialize create the DB connection and prepare all the routes
-func (s *Service) Initialize(db *sqlx.DB) {
+func (s *Service) Initialize(cache Cache, db *sqlx.DB) {
 	s.DB = db
+	s.Cache = cache
 	s.Router = mux.NewRouter()
 }
 
@@ -45,6 +51,11 @@ func (s *Service) Run(sddr string) {
 
 func (s *Service) healthcheck(w http.ResponseWriter, r *http.Request) {
 	var err error
+	c := s.Cache.Pool.Get()
+	defer c.Close()
+
+	// Check Cache
+	_, err = c.Do("PING")
 
 	// Check DB
 	err = s.DB.Ping()
@@ -62,6 +73,13 @@ func (s *Service) getUser(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+	}
+
+	if value, err := s.getUserFromCache(id); err == nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(value))
+		return
 	}
 
 	user, err := s.getUserFromDB(id)
@@ -94,20 +112,20 @@ func (s *Service) getUserWithPreferences(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	response, err := http.Get(fmt.Sprintf("http://172.19.0.6:5000/user/%d", user.ID))
+	conn, err := grpc.Dial(os.Getenv("PREFERENCE_ADDRESS"), grpc.WithInsecure())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	defer response.Body.Close()
-	var pref interface{}
-	json.NewDecoder(response.Body).Decode(&pref)
+	defer conn.Close()
+	c := pb.NewGetPreferenceDataClient(conn)
+	response, _ := c.GetPreference(context.Background(), &pb.PreferenceDataRequest{Id: int32(user.ID)})
 
 	data := struct {
 		User        User        `json:"user"`
 		Preferences interface{} `json:preferences`
 	}{
 		User:        user,
-		Preferences: pref,
+		Preferences: response.Preferences,
 	}
 	respondWithJSON(w, http.StatusOK, data)
 }
@@ -141,6 +159,11 @@ func (s *Service) createUser(w http.ResponseWriter, r *http.Request) {
 
 	s.DB.Get(&user.ID, "SELECT nextval('users_id_seq')")
 	if err := user.create(s.DB); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	JSONByte, _ := json.Marshal(user)
+	if err := s.Cache.setValue(user.ID, string(JSONByte)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -182,6 +205,13 @@ func (s *Service) deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+}
+
+func (s *Service) getUserFromCache(id int) (string, error) {
+	if value, err := s.Cache.getValue(id); err == nil && len(value) != 0 {
+		return value, err
+	}
+	return "", errors.New("Not Found")
 }
 
 func (s *Service) getUserFromDB(id int) (User, error) {

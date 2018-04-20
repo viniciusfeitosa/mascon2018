@@ -16,4 +16,4 @@ WORKDIR $GOPATH/src/app
 RUN go build -o main . 
 CMD ["/go/src/app/main"]
 
-EXPOSE 3000 50051
+EXPOSE 3000

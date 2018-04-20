@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+service GetPreferenceData {
+    rpc GetPreference (PreferenceDataRequest) returns (PreferenceDataResponse) {}
+}
+
+message PreferenceDataRequest {
+    int32 id = 1;
+}
+
+message PreferenceDataResponse {
+    repeated PreferenceData preferences = 1;
+}
+
+message PreferenceData {
+    string title = 1;
+    string description = 2;
+}

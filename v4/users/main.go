@@ -7,8 +7,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-
-	raven "github.com/getsentry/raven-go"
 )
 
 const (
@@ -18,12 +16,7 @@ const (
 	portAddr         = ":50051"
 )
 
-func init() {
-	raven.SetDSN("change by keep")
-}
-
 func main() {
-	var numWorkers int
 	cache := Cache{Enable: true}
 	flag.StringVar(&cache.Address, "redis_address", os.Getenv("APP_RD_ADDRESS"), "Redis Address")
 	flag.StringVar(&cache.Auth, "redis_auth", os.Getenv("APP_RD_AUTH"), "Redis Auth")
@@ -31,7 +24,6 @@ func main() {
 	flag.IntVar(&cache.MaxIdle, "redis_max_idle", 100, "Redis Max Idle")
 	flag.IntVar(&cache.MaxActive, "redis_max_active", 100, "Redis Max Active")
 	flag.IntVar(&cache.IdleTimeoutSecs, "redis_timeout", 60, "Redis timeout in seconds")
-	flag.IntVar(&numWorkers, "num_workers", 10, "Number of workers to consume queue")
 	flag.Parse()
 	cache.Pool = cache.NewCachePool()
 
@@ -42,13 +34,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go UsersToDB(numWorkers, db, cache, createUsersQueue)
-	go UsersToDB(numWorkers, db, cache, updateUsersQueue)
-	go UsersToDB(numWorkers, db, cache, deleteUsersQueue)
-
-	a := App{}
-	a.Initialize(cache, db)
-	go a.runGRPCServer(portAddr)
-	a.initializeRoutes()
-	a.Run(":3000")
+	s := Service{}
+	s.Initialize(cache, db)
+	s.initializeRoutes()
+	s.Run(":3000")
 }
