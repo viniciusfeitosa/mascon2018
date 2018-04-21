@@ -8,6 +8,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+// MyCustomClaims is the claim to the JWT
 type MyCustomClaims struct {
 	UserID int    `json:"ID"`
 	Name   string `json:"name"`

@@ -62,7 +62,7 @@
   branch = "master"
   name = "github.com/viniciusfeitosa/mascon2018"
   packages = ["v4/users/preferences"]
-  revision = "794cb783f172d95e2e7961723d0f24c7dae5a7e9"
+  revision = "4ebcd2c2e488174c438330e062fa863c24162a5d"
 
 [[projects]]
   branch = "master"

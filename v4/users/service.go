@@ -122,7 +122,7 @@ func (s *Service) getUserWithPreferences(w http.ResponseWriter, r *http.Request)
 
 	data := struct {
 		User        User        `json:"user"`
-		Preferences interface{} `json:preferences`
+		Preferences interface{} `json:"preferences"`
 	}{
 		User:        user,
 		Preferences: response.Preferences,

@@ -35,6 +35,7 @@ services:
       - APP_RD_DBNAME=0
       - APP_SETTINGS=project.config.DevelopmentConfig
       - DATABASE_URL=postgresql://postgres:postgres@users_service_db:5432/users_dev?sslmode=disable
+      - PREFERENCE_ADDRESS=http://preferences_service:5000
     depends_on:
       - users_service_db
       - users_cache

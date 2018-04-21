@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/codegangsta/negroni"
@@ -94,7 +95,7 @@ func (s *Service) getUserWithPreferences(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	response, err := http.Get(fmt.Sprintf("http://172.19.0.6:5000/user/%d", user.ID))
+	response, err := http.Get(fmt.Sprintf("%s/user/%d", os.Getenv("PREFERENCE_ADDRESS"), user.ID))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -104,7 +105,7 @@ func (s *Service) getUserWithPreferences(w http.ResponseWriter, r *http.Request)
 
 	data := struct {
 		User        User        `json:"user"`
-		Preferences interface{} `json:preferences`
+		Preferences interface{} `json:"preferences"`
 	}{
 		User:        user,
 		Preferences: pref,

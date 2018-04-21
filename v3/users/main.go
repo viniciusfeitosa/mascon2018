@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"os"
 
@@ -17,8 +16,6 @@ const (
 )
 
 func main() {
-	cache.Pool = cache.NewCachePool()
-
 	connectionString := os.Getenv("DATABASE_URL")
 
 	db, err := sqlx.Open("postgres", connectionString)
