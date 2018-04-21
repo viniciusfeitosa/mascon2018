@@ -9,12 +9,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const (
-	createUsersQueue = "CREATE_USER"
-	updateUsersQueue = "UPDATE_USER"
-	deleteUsersQueue = "DELETE_USER"
-)
-
 func main() {
 	cache := Cache{Enable: true}
 	flag.StringVar(&cache.Address, "redis_address", os.Getenv("APP_RD_ADDRESS"), "Redis Address")
